@@ -10,6 +10,7 @@ from keras.layers import Dense
 from keras.layers import LSTM
 
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def criar_arranjo(dados, window_size = 1):
     dado_X, dado_Y = [], []
@@ -21,7 +22,7 @@ def criar_arranjo(dados, window_size = 1):
     
 def modelo_keras(treino_X, treino_Y, window_size = 1):
     modelo = Sequential()
-    modelo.add(LSTM(32, input_shape = (1, window_size)))
+    modelo.add(LSTM(64, input_shape = (1, window_size)))
     modelo.add(Dense(1))
     modelo.summary()
     modelo.compile(loss = "mean_squared_error", optimizer = "adam")
@@ -84,18 +85,20 @@ rmse_teste, previsao_teste = previsao_e_score(modelo, teste_X, teste_Y)
 print("Training data score: %.2f RMSE" % rmse_treino)
 print("Test data score: %.2f RMSE" % rmse_teste)
 
+data_treino = data_arranjo[window_size:len(previsao_treino) + window_size]
 grafico_previsao_treino = np.empty_like(dados)
 grafico_previsao_treino[:, :] = np.nan
 grafico_previsao_treino[window_size:len(previsao_treino) + window_size, :] = previsao_treino
 
+data_teste = data_arranjo[len(previsao_treino) + (window_size * 2) + 1:len(dados) - 1]
 grafico_previsao_teste = np.empty_like(dados)
 grafico_previsao_teste[:, :] = np.nan
 grafico_previsao_teste[len(previsao_treino) + (window_size * 2) + 1:len(dados) - 1, :] = previsao_teste
 
 plt.figure(figsize = (15, 5))
 plt.plot(data_arranjo,scaler.inverse_transform(dados), label = "Valor verdadeiro")
-plt.plot(data_arranjo,grafico_previsao_treino, label = "Previsão dados treino")
-plt.plot(data_arranjo,grafico_previsao_teste, label = "Previsão dados teste")
+plt.plot(data_treino,grafico_previsao_treino, label = "Previsão dados treino")
+plt.plot(data_teste,grafico_previsao_teste, label = "Previsão dados teste")
 plt.xlabel("Meses")
 plt.ylabel("Número de passageiros")
 plt.title("Comparando dados verdadeiros e previstos")
